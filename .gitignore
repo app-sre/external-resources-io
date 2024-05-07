@@ -1,0 +1,7 @@
+__pycache__/
+dist/
+venv/
+.cache/
+.config/
+.gitconfig
+.vscode
