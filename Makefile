@@ -1,8 +1,10 @@
 .PHONY: release
 
-CONTAINER_ENGINE ?= $(shell which podman >/dev/null 2>&1 && echo podman || echo docker)
-IMAGE=registry.access.redhat.com/ubi9/python-311:latest
-BASEPATH=/opt/app-root/src
+CONTAINER_ENGINE = docker
+IMAGE_TEST=external_resources_io_test
 
-release:
-	$(CONTAINER_ENGINE) run -v $(shell pwd):$(BASEPATH) --rm $(IMAGE) $(BASEPATH)/hack/release.sh
+.build-release-image:
+	$(CONTAINER_ENGINE) build -t $(IMAGE_TEST) -f hack/Dockerfile.release .
+
+release: .build-release-image
+	$(CONTAINER_ENGINE) run -e TWINE_PASSWORD --rm -ti $(IMAGE_TEST) /bin/bash hack/release.sh

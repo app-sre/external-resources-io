@@ -1,0 +1,7 @@
+FROM registry.access.redhat.com/ubi9/python-311:latest
+
+COPY .git .git
+COPY external_resources_io external_resources_io
+COPY hack hack
+COPY README.md requirements.txt ./
+COPY --chmod=666 pyproject.toml ./

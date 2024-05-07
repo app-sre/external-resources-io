@@ -5,6 +5,8 @@ git config --global --add safe.directory $BASEPATH
 
 pip install --upgrade pip
 pip install -r $BASEPATH/requirements.txt
+
+poetry config pypi-token.pypi $TWINE_PASSWORD
 poetry self add "poetry-dynamic-versioning[plugin]"
 poetry build
 poetry publish
