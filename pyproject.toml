@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "external-resources-io"
+version = "0.0.0"
+description = "Util classes for AppSRE External Resources system"
+authors = ["Jordi Piriz <jpiriz@redhat.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "~2.5.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+latest-tag = true
+format-jinja = "{% if distance==0 %}{{ base }}{% else %}{{ base }}rc{{ distance }}{% endif %}"
