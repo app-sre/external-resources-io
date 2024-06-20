@@ -6,4 +6,4 @@ poetry env use /opt/app-root/bin/python
 poetry config pypi-token.pypi $TWINE_PASSWORD
 poetry self add "poetry-dynamic-versioning[plugin]"
 poetry build
-poetry publish
+poetry publish --skip-existing
