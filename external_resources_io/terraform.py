@@ -32,8 +32,8 @@ class Change(BaseModel):
     # actions, both values will be identical. After will be incomplete
     # if there are values within it that won't be known until after
     # apply.
-    before: Any
-    after: Any
+    before: Any | None = None
+    after: Any | None = None
     # A deep object of booleans that denotes any values that are
     # unknown in a resource. These values were previously referred to
     # as "computed" values.
@@ -45,8 +45,8 @@ class Change(BaseModel):
     # replaced with true, and all non-sensitive leaf values omitted. These
     # objects should be combined with Before and After to prevent accidental
     # display of sensitive values in user interfaces.
-    before_sensitive: Any
-    after_sensitive: Any
+    before_sensitive: Any | None = None
+    after_sensitive: Any | None = None
 
 
 class ResourceChange(BaseModel):
