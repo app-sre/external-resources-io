@@ -5,3 +5,5 @@ venv/
 .config/
 .gitconfig
 .vscode
+.coverage
+coverage.xml

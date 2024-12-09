@@ -8,7 +8,7 @@ test:
 	uv run --frozen ruff check --no-fix
 	uv run --frozen ruff format --check
 	uv run --frozen mypy
-	uv run --frozen pytest --cov=reconcile --cov-report=term-missing --cov-report xml
+	uv run --frozen pytest --cov=external_resources_io --cov-report=term-missing --cov-report xml
 
 .PHONY: dev-venv
 dev-venv:
