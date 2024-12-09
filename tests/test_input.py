@@ -1,11 +1,12 @@
 from typing import Any
 
+from pytest import fixture
+
 from external_resources_io.input import (
     AppInterfaceProvision,
     TerraformProvisionOptions,
     parse_model,
 )
-from pytest import fixture
 
 
 @fixture
@@ -40,7 +41,6 @@ def data() -> dict[str, Any]:
     }
   }
 }
-
 
 
 def test_parse_provision(data: dict) -> None:

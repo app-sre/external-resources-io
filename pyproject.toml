@@ -3,6 +3,7 @@ name = "external-resources-io"
 version = "0.3.3"
 requires-python = ">=3.11"
 description = "Util classes for AppSRE External Resources system"
+license = { text = "Apache 2.0" }
 readme = "README.md"
 authors = [{ name = "Jordi Piriz", email = "jpiriz@redhat.com" }]
 dependencies = ["pydantic ~=2.10.0"]
