@@ -1,22 +1,16 @@
-VENV_CMD := . venv/bin/activate &&
-CONTAINER_ENGINE = docker
-IMAGE_TEST=external_resources_io_test
-
-.PHONY: .build-image
-.build-image:
-	$(CONTAINER_ENGINE) build -t $(IMAGE_TEST) -f hack/Dockerfile .
-
-.PHONY: release
-release: .build-image
-	$(CONTAINER_ENGINE) run -e TWINE_PASSWORD --rm $(IMAGE_TEST) /bin/bash hack/release.sh
+CONTAINER_ENGINE ?= $(shell which podman >/dev/null 2>&1 && echo podman || echo docker)
 
 .PHONY: test
-test: .build-image
-	$(CONTAINER_ENGINE) run --rm -ti $(IMAGE_TEST) /bin/bash hack/test.sh
+test:
+	$(CONTAINER_ENGINE) build --progress plain -f Dockerfile .
 
 .PHONY: dev-venv
-	python3.11 -m venv venv
-	@$(VENV_CMD) pip install --upgrade pip
-	@$(VENV_CMD) pip install -r requirements.txt
-	@$(VENV_CMD) pip install -r requirements_dev.txt
-	@$(VENV_CMD) pip install -r requirements_test.txt
+dev-venv:
+	uv sync --python 3.11
+
+.PHONY: unittests
+unittests:
+	uv run ruff check --no-fix
+	uv run ruff format --check
+	uv run mypy
+	uv run pytest --cov=reconcile --cov-report=term-missing --cov-report xml
