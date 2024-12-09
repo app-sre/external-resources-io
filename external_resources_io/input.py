@@ -2,6 +2,7 @@ import base64
 import json
 import os
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, TypeVar
 
 from pydantic import BaseModel
@@ -29,13 +30,11 @@ T = TypeVar("T", bound=BaseModel)
 
 
 def parse_model(model_class: type[T], data: Mapping[str, Any]) -> T:
-    input = model_class.model_validate(data)
-    return input
+    return model_class.model_validate(data)
 
 
 def read_input_from_file(file_path: str = "/inputs/input.json") -> dict[str, Any]:
-    with open(file_path, encoding="utf-8") as f:
-        return json.loads(f.read())
+    return json.loads(Path(file_path).read_text(encoding="utf-8"))
 
 
 def read_input_from_env_var(var: str = "INPUT") -> dict[str, Any]:

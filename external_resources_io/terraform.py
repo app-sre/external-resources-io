@@ -1,4 +1,5 @@
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
@@ -155,11 +156,8 @@ class Plan(BaseModel):
     errored: bool | None = None
 
 
-###
-
-
 class TerraformJsonPlanParser:
     def __init__(self, plan_path: str) -> None:
-        with open(plan_path, encoding="utf-8") as f:
-            data = f.read()
-        self.plan = Plan.model_validate_json(data)
+        self.plan = Plan.model_validate_json(
+            Path(plan_path).read_text(encoding="utf-8")
+        )
