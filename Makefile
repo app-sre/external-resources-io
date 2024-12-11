@@ -1,22 +1,23 @@
-VENV_CMD := . venv/bin/activate &&
-CONTAINER_ENGINE = docker
-IMAGE_TEST=external_resources_io_test
-
-.PHONY: .build-image
-.build-image:
-	$(CONTAINER_ENGINE) build -t $(IMAGE_TEST) -f hack/Dockerfile .
-
-.PHONY: release
-release: .build-image
-	$(CONTAINER_ENGINE) run -e TWINE_PASSWORD --rm $(IMAGE_TEST) /bin/bash hack/release.sh
+.PHONY: format
+format:
+	uv run ruff check
+	uv run ruff format
 
 .PHONY: test
-test: .build-image
-	$(CONTAINER_ENGINE) run --rm -ti $(IMAGE_TEST) /bin/bash hack/test.sh
+test:
+	uv run --frozen ruff check --no-fix
+	uv run --frozen ruff format --check
+	uv run --frozen mypy
+	uv run --frozen pytest --cov=external_resources_io --cov-report=term-missing --cov-report xml
 
 .PHONY: dev-venv
-	python3.11 -m venv venv
-	@$(VENV_CMD) pip install --upgrade pip
-	@$(VENV_CMD) pip install -r requirements.txt
-	@$(VENV_CMD) pip install -r requirements_dev.txt
-	@$(VENV_CMD) pip install -r requirements_test.txt
+dev-venv:
+	uv sync --python 3.11
+
+# do not print pypi commands to avoid the token leaking to the logs
+.SILENT: pypi
+.PHONY: pypi
+pypi:
+	uv build --sdist --wheel
+	UV_PUBLISH_TOKEN=$(shell cat /run/secrets/app-sre-pypi-credentials/token) \
+		uv publish
