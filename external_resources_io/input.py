@@ -33,9 +33,9 @@ def parse_model(model_class: type[T], data: Mapping[str, Any]) -> T:
     return model_class.model_validate(data)
 
 
-def read_input_from_file(
-    file_path: str = os.environ.get("ER_INPUT_FILE", "/inputs/input.json"),
-) -> dict[str, Any]:
+def read_input_from_file(file_path: str | None = None) -> dict[str, Any]:
+    if not file_path:
+        file_path = os.environ.get("ER_INPUT_FILE", "/inputs/input.json")
     return json.loads(Path(file_path).read_text(encoding="utf-8"))
 
 
@@ -53,9 +53,11 @@ def get_ai_provision_data() -> AppInterfaceProvision:
 
 def create_tf_vars_json(
     input_data: T,
-    vars_file: str = os.environ.get("TF_VARS_FILE", "./module/tfvars.json"),
+    vars_file: str | None = None,
 ) -> None:
     """Helper method to create teraform vars files. Used in terraform based ERv2 modules."""
+    if not vars_file:
+        vars_file = os.environ.get("TF_VARS_FILE", "./module/tfvars.json")
     Path(vars_file).write_text(
         input_data.model_dump_json(
             exclude_none=True,
@@ -66,9 +68,11 @@ def create_tf_vars_json(
 
 def create_backend_tf_file(
     provision_data: AppInterfaceProvision,
-    backend_file: str = os.environ.get("BACKEND_TF_FILE", "./module/backend.tf"),
+    backend_file: str | None = None,
 ) -> None:
     """Helper method to create teraform backend configuration. Used in terraform based ERv2 modules."""
+    if not backend_file:
+        backend_file = os.environ.get("BACKEND_TF_FILE", "./module/backend.tf")
     Path(backend_file).write_text(
         f"""
 terraform {{
