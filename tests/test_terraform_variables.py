@@ -1,13 +1,16 @@
-# ruff: noqa: S603,S607,PLC2701
-import subprocess
+# ruff: noqa: ANN401,S603,S607,PLC2701
+
+import json
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Literal
 
 import pytest
 from pydantic import BaseModel
+from pydantic_core import PydanticUndefined
 
 from external_resources_io.terraform.generators import (
+    _generate_default,
     _generate_terraform_variable,
     _generate_terraform_variables_from_model,
     _get_terraform_type,
@@ -45,131 +48,120 @@ class SampleModel(BaseModel):
     nested_nested: Sequence[NestedNestedModel]
 
 
-VARIABLES_TF = """variable "name" {
-  type = string
+VARIABLES_TF = {
+    "variable": {
+        "name": {
+            "type": "string",
+        },
+        "str_with_default": {
+            "type": "string",
+            "default": '"default"',
+        },
+        "count": {
+            "type": "number",
+            "default": "0",
+        },
+        "enabled": {
+            "type": "bool",
+            "default": "true",
+        },
+        "tags": {
+            "type": "map(any)",
+            "default": "null",
+        },
+        "variants": {
+            "type": "list(string)",
+            "default": '["default"]',
+        },
+        "mode": {
+            "type": "string",
+            "default": '"auto"',
+        },
+        "nested": {
+            "type": "map({field = string,numeric = number})",
+        },
+        "optional_nested": {
+            "type": "map({field = string,numeric = number})",
+            "default": "null",
+        },
+        "optional": {
+            "type": "string",
+            "default": "null",
+        },
+        "nested_nested": {
+            "type": "list(map({nested_items = list(map({field = string,numeric = number}))}))"
+        },
+    }
 }
 
-variable "str_with_default" {
-  type    = string
-  default = "default"
-}
 
-variable "count" {
-  type    = number
-  default = 0
-}
-
-variable "enabled" {
-  type    = bool
-  default = true
-}
-
-variable "tags" {
-  type    = map(any)
-  default = null
-}
-
-variable "variants" {
-  type    = list(string)
-  default = ["default"]
-}
-
-variable "mode" {
-  type    = string
-  default = "auto"
-}
-
-variable "nested" {
-  type = object({
-    field   = string,
-    numeric = number
-  })
-}
-
-variable "optional_nested" {
-  type = object({
-    field   = string,
-    numeric = number
-  })
-  default = null
-}
-
-variable "optional" {
-  type    = string
-  default = null
-}
-
-variable "nested_nested" {
-  type = list(object({
-    nested_items = list(object({
-      field   = string,
-      numeric = number
-    }))
-  }))
-}
-
-"""
-
-
-# Fixtures
 @pytest.fixture
 def sample_model() -> type[BaseModel]:
     return SampleModel
 
 
-def terraform_executable() -> bool:
-    try:
-        subprocess.run(["terraform", "--version"], check=True, capture_output=True)
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
+@pytest.mark.parametrize(
+    ("python_type", "expected"),
+    [
+        (str, "string"),
+        (int, "number"),
+        (bool, "bool"),
+        (list[str], "list(string)"),
+        (list, "list(any)"),
+        (set[str], "set(string)"),
+        (set, "set(any)"),
+        (dict[str, int], "map(number)"),
+        (dict, "map(any)"),
+        (Literal["on", "off"], "string"),
+        (NestedModel, "map({field = string,numeric = number})"),
+    ],
+)
+def test_get_terraform_type_basic(python_type: Any, expected: str) -> None:
+    assert _get_terraform_type(python_type) == expected
 
 
-# Unit Tests
-def test_get_terraform_type_basic() -> None:
-    assert _get_terraform_type(str) == "string"
-    assert _get_terraform_type(int) == "number"
-    assert _get_terraform_type(bool) == "bool"
-    assert _get_terraform_type(list[str]) == "list(string)"
-    assert _get_terraform_type(dict[str, int]) == "map(number)"
-
-
-def test_get_terraform_type_literal() -> None:
-    literal_type = Literal["on", "off"]
-    assert _get_terraform_type(literal_type) == "string"
-
-
-def test_get_terraform_type_model() -> None:
-    assert _get_terraform_type(NestedModel) == (
-        "object({\n    field = string,\n    numeric = number\n  })"
+@pytest.mark.parametrize(
+    ("python_type", "default", "expected"),
+    [
+        (str, "value", {"default": '"value"', "type": "string"}),
+        (int, None, {"default": "null", "type": "number"}),
+        (bool, True, {"default": "true", "type": "bool"}),
+        (str, PydanticUndefined, {"type": "string"}),
+    ],
+)
+def test_generate_terraform_variable(
+    python_type: Any, default: Any, expected: dict
+) -> None:
+    assert (
+        _generate_terraform_variable(python_type=python_type, default=default)
+        == expected
     )
 
 
-def test_generate_terraform_variable() -> None:
-    output = _generate_terraform_variable(
-        name="test_var", tf_type="string", default="value"
-    )
-    assert output == ('variable "test_var" {\ntype = string\ndefault = "value"\n}\n\n')
+@pytest.mark.parametrize(
+    ("default", "expected"),
+    [
+        ("value", '"value"'),
+        (True, "true"),
+        (False, "false"),
+        (None, "null"),
+        ([1, 2, 3], "[1, 2, 3]"),
+        (["1", "2", "3"], '["1", "2", "3"]'),
+        ([True, False], "[true, false]"),
+    ],
+)
+def test_generate_default(default: Any, expected: str) -> None:
+    assert _generate_default(default) == expected
 
 
-@pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
 def test_generate_terraform_variables_from_model(sample_model: type[BaseModel]) -> None:
-    output = subprocess.run(
-        ["terraform", "fmt", "-"],
-        input=_generate_terraform_variables_from_model(sample_model),
-        text=True,
-        check=True,
-        capture_output=True,
-    ).stdout
-    assert output == VARIABLES_TF, output
+    output = _generate_terraform_variables_from_model(sample_model)
+    assert output == VARIABLES_TF
 
 
-# Integration Test
-@pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
-def test_terraform_fmt_compatibility(
+def test_create_variables_tf_file(
     tmp_path: Path, sample_model: type[BaseModel]
 ) -> None:
-    tf_file = tmp_path / "variables.tf"
+    tf_file = tmp_path / "variables.tf.json"
     create_variables_tf_file(sample_model, str(tf_file))
-    # Run terraform fmt
-    subprocess.run(["terraform", "fmt", str(tf_file)], check=True)
+    assert json.loads(tf_file.read_text()) == VARIABLES_TF

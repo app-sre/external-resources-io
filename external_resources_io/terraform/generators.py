@@ -1,4 +1,5 @@
 # ruff: noqa: ANN401
+import json
 import os
 from collections.abc import Sequence
 from pathlib import Path
@@ -50,58 +51,63 @@ terraform {{
 
 
 def create_variables_tf_file(
-    model: type[BaseModel],
-    variables_file: str | None = None,
+    model: type[BaseModel], variables_file: str | None = None
 ) -> None:
-    """Generates Terraform variables file."""
+    """Generates Terraform variables json file."""
     if not variables_file:
-        variables_file = os.environ.get("VARIABLES_TF_FILE", "./module/variables.tf")
+        variables_file = os.environ.get(
+            "VARIABLES_TF_JSON_FILE", "./module/variables.tf.json"
+        )
     Path(variables_file).write_text(
-        _generate_terraform_variables_from_model(model),
+        json.dumps(_generate_terraform_variables_from_model(model)),
         encoding="utf-8",
     )
 
 
-def _generate_terraform_variables_from_model(model: type[BaseModel]) -> str:
-    """Generates Terraform variables with proper nested structure and defaults."""
-    terraform_variables = ""
+def _generate_terraform_variables_from_model(model: type[BaseModel]) -> dict:
+    """Generates Terraform variables json."""
+    terraform_json: dict = {"variable": {}}
+    terraform_variables = terraform_json["variable"]
 
     for field_name, field_info in model.model_fields.items():
-        tf_type = _get_terraform_type(field_info.annotation)
         default = field_info.default if field_info.default is not None else None
-        terraform_variables += _generate_terraform_variable(
-            name=field_name, tf_type=tf_type, default=default
+        terraform_variables[field_name] = _generate_terraform_variable(
+            python_type=field_info.annotation, default=default
         )
 
-    return terraform_variables
+    return terraform_json
 
 
-def _generate_terraform_variable(name: str, tf_type: str, default: Any = None) -> str:
+def _generate_terraform_variable(python_type: Any, default: Any = None) -> dict:
     """Generates a Terraform variable block."""
-    variable_block = f'variable "{name}" {{\n'
-    variable_block += f"type = {tf_type}\n"
+    variable_block = {"type": _get_terraform_type(python_type)}
 
     if default is not PydanticUndefined:
-        # Handle special Terraform values and formatting
-        if isinstance(default, str) and not default.startswith(('"', "[", "{")):
-            default = f'"{default}"'
-        elif isinstance(default, bool):
-            default = str(default).lower()
-        elif default is None:
-            default = "null"
-        elif isinstance(default, list):
-            default = [f'"{v}"' if isinstance(v, str) else str(v) for v in default]
-            default = f"[{', '.join(v for v in default)}]"
-        variable_block += f"default = {default}\n"
-    variable_block += "}\n\n"
+        variable_block["default"] = _generate_default(default)
     return variable_block
 
 
-def _conver_generic_types(origin: Any, args: Any) -> str:
+def _generate_default(default: Any) -> str:
+    if isinstance(default, str) and not default.startswith(('"', "[", "{")):
+        return f'"{default}"'
+    if isinstance(default, bool):
+        return str(default).lower()
+    if default is None:
+        return "null"
+    if isinstance(default, list):
+        defaults = [_generate_default(v) for v in default]
+        return f"[{', '.join(v for v in defaults)}]"
+    return str(default)
+
+
+def _convert_generic_types(origin: Any, args: Any) -> str:  # noqa: PLR0911
     """Convert generic types to Terraform types."""
     match origin:
         case t if t in {list, Sequence}:
             return f"list({_get_terraform_type(args[0])})" if args else "list(any)"
+
+        case t if t is set:
+            return f"set({_get_terraform_type(args[0])})" if args else "set(any)"
 
         case t if t is dict:
             return f"map({_get_terraform_type(args[1])})" if args else "map(any)"
@@ -118,7 +124,7 @@ def _conver_generic_types(origin: Any, args: Any) -> str:
             return "any"
 
 
-def _conver_basic_types(python_type: Any) -> str:
+def _convert_basic_types(python_type: Any) -> str:  # noqa: PLR0911
     """Convert basic python types to Terraform types."""
     match python_type:
         case t if t is str:
@@ -127,8 +133,14 @@ def _conver_basic_types(python_type: Any) -> str:
             return "number"
         case t if t is bool:
             return "bool"
+        case t if t is list:
+            return "list(any)"
+        case t if t is set:
+            return "set(any)"
+        case t if t is dict:
+            return "map(any)"
         case t if issubclass(t, BaseModel):
-            return f"object({_generate_terraform_object_type(t)})"
+            return f"map({_generate_terraform_object_type(t)})"
         case _:
             return "any"
 
@@ -139,9 +151,9 @@ def _get_terraform_type(python_type: Any) -> str:
     args = get_args(python_type)
 
     return (
-        _conver_generic_types(origin, args)
+        _convert_generic_types(origin, args)
         if origin is not None
-        else _conver_basic_types(python_type)
+        else _convert_basic_types(python_type)
     )
 
 
@@ -151,4 +163,4 @@ def _generate_terraform_object_type(model: type[BaseModel]) -> str:
     for field_name, field_info in model.model_fields.items():
         field_type = _get_terraform_type(field_info.annotation)
         fields.append(f"{field_name} = {field_type}")
-    return "{\n    " + ",\n    ".join(fields) + "\n  }"
+    return "{" + ",".join(fields) + "}"
