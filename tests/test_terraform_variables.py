@@ -106,23 +106,54 @@ VARIABLES_TF_DICT = {
 }
 
 VARIABLES_TF = """
-variable "name" {
-    type = string
-}
-
-variable "str_with_default" {
-  type    = string
-  default = "default"
-}
-
 variable "counter" {
   type    = number
   default = 0
 }
 
+variable "default_nested" {
+  type = object({ field = string, numeric = number })
+  default = {
+    field   = "default"
+    numeric = 0
+  }
+}
+
 variable "enabled" {
   type    = bool
   default = true
+}
+
+variable "mode" {
+  type    = string
+  default = "auto"
+}
+
+variable "name" {
+    type = string
+}
+
+variable "nested" {
+  type = object({ field = string, numeric = number })
+}
+
+variable "nested_nested" {
+  type = list(object({ nested_items = list(object({ field = string, numeric = number })) }))
+}
+
+variable "optional" {
+  type    = string
+  default = null
+}
+
+variable "optional_nested" {
+  type    = object({ field = string, numeric = number })
+  default = null
+}
+
+variable "str_with_default" {
+  type    = string
+  default = "default"
 }
 
 variable "tags" {
@@ -133,37 +164,6 @@ variable "tags" {
 variable "variants" {
   type = list(string)
   default = ["foo", "bar"]
-}
-
-variable "mode" {
-  type    = string
-  default = "auto"
-}
-
-variable "nested" {
-  type = object({ field = string, numeric = number })
-}
-
-variable "optional_nested" {
-  type    = object({ field = string, numeric = number })
-  default = null
-}
-
-variable "optional" {
-  type    = string
-  default = null
-}
-
-variable "nested_nested" {
-  type = list(object({ nested_items = list(object({ field = string, numeric = number })) }))
-}
-
-variable "default_nested" {
-  type = object({ field = string, numeric = number })
-  default = {
-    field   = "default"
-    numeric = 0
-  }
 }
 """.lstrip("\n")
 
