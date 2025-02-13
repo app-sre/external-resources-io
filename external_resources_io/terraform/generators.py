@@ -80,24 +80,15 @@ def _generate_terraform_variables_from_model(model: type[BaseModel]) -> dict:
 
 def _generate_terraform_variable(python_type: Any, default: Any = None) -> dict:
     """Generates a Terraform variable block."""
-    variable_block = {"type": _get_terraform_type(python_type)}
+    variable_block: dict[str, str | None] = {"type": _get_terraform_type(python_type)}
 
     if default is not PydanticUndefined:
-        variable_block["default"] = _generate_default(default)
+        variable_block["default"] = (
+            default.model_dump()
+            if default and isinstance(default, BaseModel)
+            else default
+        )
     return variable_block
-
-
-def _generate_default(default: Any) -> str:
-    if isinstance(default, str) and not default.startswith(('"', "[", "{")):
-        return f'"{default}"'
-    if isinstance(default, bool):
-        return str(default).lower()
-    if default is None:
-        return "null"
-    if isinstance(default, list):
-        defaults = [_generate_default(v) for v in default]
-        return f"[{', '.join(v for v in defaults)}]"
-    return str(default)
 
 
 def _convert_generic_types(origin: Any, args: Any) -> str:  # noqa: PLR0911
@@ -140,7 +131,7 @@ def _convert_basic_types(python_type: Any) -> str:  # noqa: PLR0911
         case t if t is dict:
             return "map(any)"
         case t if issubclass(t, BaseModel):
-            return f"map({_generate_terraform_object_type(t)})"
+            return f"object({_generate_terraform_object_type(t)})"
         case _:
             return "any"
 
