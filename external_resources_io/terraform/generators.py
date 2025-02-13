@@ -69,13 +69,19 @@ def _generate_terraform_variables_from_model(model: type[BaseModel]) -> dict:
     terraform_json: dict = {"variable": {}}
     terraform_variables = terraform_json["variable"]
 
-    for field_name, field_info in model.model_fields.items():
-        default = field_info.default if field_info.default is not None else None
-        terraform_variables[field_name] = _generate_terraform_variable(
-            python_type=field_info.annotation, default=default
-        )
 
-    return terraform_json
+def _generate_fields(model: type[BaseModel]) -> dict[str, dict]:
+    return {
+        field_name: _generate_terraform_variable(
+            python_type=field_info.annotation, default=field_info.default
+        )
+        for field_name, field_info in model.model_fields.items()
+    }
+
+
+def _generate_terraform_variables_from_model(model: type[BaseModel]) -> dict:
+    """Generates Terraform variables json."""
+    return {"variable": _generate_fields(model)}
 
 
 def _generate_terraform_variable(python_type: Any, default: Any = None) -> dict:
@@ -131,7 +137,11 @@ def _convert_basic_types(python_type: Any) -> str:  # noqa: PLR0911
         case t if t is dict:
             return "map(any)"
         case t if issubclass(t, BaseModel):
-            return f"object({_generate_terraform_object_type(t)})"
+            # nested model
+            fields_types = ",".join(
+                f"{k} = {v['type']}" for k, v in _generate_fields(t).items()
+            )
+            return f"object({{{fields_types}}})"
         case _:
             return "any"
 
