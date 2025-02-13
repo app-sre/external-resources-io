@@ -1,4 +1,4 @@
-# ruff: noqa: ANN401,S603,S607,PLC2701
+# ruff: noqa: ANN401,PLC2701
 
 import subprocess
 from collections.abc import Sequence
@@ -16,6 +16,8 @@ from external_resources_io.terraform.generators import (
     _get_terraform_type,
     create_variables_tf_file,
     create_variables_tf_json_file,
+    terraform_available,
+    terraform_fmt,
 )
 
 
@@ -41,7 +43,7 @@ class SampleModel(BaseModel):
     counter: int = 0
     enabled: bool = True
     tags: dict[str, Any] | None = None
-    variants: list[str] = ["default"]
+    variants: list[str] = ["foo", "bar"]
     mode: Literal["auto", "manual"] = "auto"
     nested: NestedModel
     optional_nested: NestedModel | None = None
@@ -73,7 +75,7 @@ VARIABLES_TF_DICT = {
         },
         "variants": {
             "type": "list(string)",
-            "default": ["default"],
+            "default": ["foo", "bar"],
         },
         "mode": {
             "type": "string",
@@ -130,7 +132,7 @@ variable "tags" {
 
 variable "variants" {
   type = list(string)
-  default = ["default"]
+  default = ["foo", "bar"]
 }
 
 variable "mode" {
@@ -169,24 +171,6 @@ variable "default_nested" {
 @pytest.fixture
 def sample_model() -> type[BaseModel]:
     return SampleModel
-
-
-def terraform_executable() -> bool:
-    try:
-        subprocess.run(["terraform", "--version"], check=True, capture_output=True)
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
-
-
-def terraform_fmt(data: str) -> str:
-    return subprocess.run(
-        ["terraform", "fmt", "-"],
-        input=data,
-        text=True,
-        check=True,
-        capture_output=True,
-    ).stdout
 
 
 @pytest.mark.parametrize(
@@ -232,7 +216,6 @@ def test_generate_terraform_variables_from_model(sample_model: type[BaseModel]) 
     assert output == VARIABLES_TF_DICT
 
 
-@pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
 def test_create_variables_tf_json_file(
     tmp_path: Path, sample_model: type[BaseModel]
 ) -> None:
@@ -242,7 +225,6 @@ def test_create_variables_tf_json_file(
     subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
 
 
-@pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
 def test_convert_json_to_hcl(sample_model: type[BaseModel]) -> None:
     output = terraform_fmt(
         _convert_json_to_hcl(_generate_terraform_variables_from_model(sample_model))
@@ -251,13 +233,13 @@ def test_convert_json_to_hcl(sample_model: type[BaseModel]) -> None:
     assert output == expected
 
 
-@pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
 def test_create_variables_tf_file(
     tmp_path: Path, sample_model: type[BaseModel]
 ) -> None:
     tf_file = tmp_path / "variables.tf"
     create_variables_tf_file(sample_model, str(tf_file))
-    # Format the generated file
-    subprocess.run(["terraform", f"-chdir={tmp_path}", "fmt"], check=True)
-    # Validate the generated file
-    subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
+    if terraform_available():
+        # Format the generated file
+        subprocess.run(["terraform", f"-chdir={tmp_path}", "fmt"], check=True)
+        # Validate the generated file
+        subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
