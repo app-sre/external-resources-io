@@ -33,7 +33,7 @@ def parse_model(model_class: type[T], data: Mapping[str, Any]) -> T:
     return model_class.model_validate(data)
 
 
-def read_input_from_file(file_path: str | None = None) -> dict[str, Any]:
+def read_input_from_file(file_path: Path | str | None = None) -> dict[str, Any]:
     if not file_path:
         file_path = os.environ.get("ER_INPUT_FILE", "/inputs/input.json")
     return json.loads(Path(file_path).read_text(encoding="utf-8"))

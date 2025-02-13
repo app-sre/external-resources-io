@@ -12,13 +12,18 @@ from pydantic_core import PydanticUndefined
 
 from external_resources_io.input import AppInterfaceProvision
 
+DEFAULT_TF_VARS_FILE = "./module/tfvars.json"
+DEFAULT_BACKEND_TF_FILE = "./module/backend.tf"
+DEFAULT_VARIABLES_TF_JSON_FILE = "./module/variables.tf.json"
+DEFAULT_VARIABLES_TF_FILE = "./module/variables.tf"
+
 
 def create_tf_vars_json(
     input_data: BaseModel, output_file: Path | str | None = None
 ) -> Path:
     """Helper method to create teraform vars files. Used in terraform based ERv2 modules."""
     if not output_file:
-        output_file = os.environ.get("TF_VARS_FILE", "./module/tfvars.json")
+        output_file = os.environ.get("TF_VARS_FILE", DEFAULT_TF_VARS_FILE)
     output = Path(output_file)
     output.write_text(
         input_data.model_dump_json(
@@ -30,11 +35,11 @@ def create_tf_vars_json(
 
 
 def create_backend_tf_file(
-    provision_data: AppInterfaceProvision, output_file: str | None = None
+    provision_data: AppInterfaceProvision, output_file: Path | str | None = None
 ) -> Path:
     """Helper method to create teraform backend configuration. Used in terraform based ERv2 modules."""
     if not output_file:
-        output_file = os.environ.get("BACKEND_TF_FILE", "./module/backend.tf")
+        output_file = os.environ.get("BACKEND_TF_FILE", DEFAULT_BACKEND_TF_FILE)
     output = Path(output_file)
     output.write_text(
         terraform_fmt(f"""
@@ -58,7 +63,7 @@ def create_variables_tf_json_file(
     """Generates Terraform variables.tf.json file."""
     if not output_file:
         output_file = os.environ.get(
-            "VARIABLES_TF_JSON_FILE", "./module/variables.tf.json"
+            "VARIABLES_TF_JSON_FILE", DEFAULT_VARIABLES_TF_JSON_FILE
         )
     output = Path(output_file)
     output.write_text(
@@ -73,9 +78,7 @@ def create_variables_tf_file(
 ) -> Path:
     """Generates Terraform variables.tf file."""
     if not variables_file:
-        variables_file = os.environ.get(
-            "VARIABLES_TF_JSON_FILE", "./module/variables.tf"
-        )
+        variables_file = os.environ.get("VARIABLES_TF_FILE", DEFAULT_VARIABLES_TF_FILE)
     output = Path(variables_file)
     output.write_text(
         terraform_fmt(
