@@ -130,9 +130,7 @@ variable "tags" {
 
 variable "variants" {
   type = list(string)
-  default = [
-    "default"
-  ]
+  default = ["default"]
 }
 
 variable "mode" {

@@ -166,33 +166,31 @@ def _get_terraform_type(python_type: Any) -> str:
     )
 
 
-def _convert_json_value_to_hcl(value: Any) -> str:  # noqa: C901, PLR0911
+def _convert_json_value_to_hcl(value: Any) -> str:  # noqa: PLR0911
     """Converts a JSON value to HCL."""
-    if isinstance(value, str):
-        return f'"{value}"'
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, int | float):
-        return str(value)
-    if isinstance(value, list):
-        if not value:
-            return "[]"
-        elements = []
-        for e in value:
-            elem = _convert_json_value_to_hcl(e)
-            elements.append(elem)
-        return "[\n" + "\n".join(elements) + "\n]"
-    if isinstance(value, dict):
-        if not value:
-            return "{}"
-        pairs = []
-        for k, v in value.items():
-            converted_v = _convert_json_value_to_hcl(v)
-            pairs.append(f"{k} = {converted_v}")
-        return "{\n" + "\n".join(pairs) + "\n}"
-    if value is None:
-        return "null"
-    return str(value)
+    match value:
+        case t if isinstance(t, str):
+            return f'"{value}"'
+        case t if isinstance(t, bool):
+            return str(value).lower()
+        case t if isinstance(t, int | float):
+            return str(value)
+        case t if isinstance(t, list):
+            if not value:
+                return "[]"
+            return "[" + "\n".join(_convert_json_value_to_hcl(e) for e in value) + "]"
+        case t if isinstance(t, dict):
+            if not value:
+                return "{}"
+            pairs = []
+            for k, v in value.items():
+                converted_v = _convert_json_value_to_hcl(v)
+                pairs.append(f"{k} = {converted_v}")
+            return "{\n" + "\n".join(pairs) + "\n}"
+        case None:
+            return "null"
+        case _:
+            return str(value)
 
 
 def _convert_json_to_hcl(data: dict) -> str:
@@ -203,7 +201,7 @@ def _convert_json_to_hcl(data: dict) -> str:
         block_lines = [f'variable "{var_name}" {{']
         for key, value in var_config.items():
             hcl_value = value if key == "type" else _convert_json_value_to_hcl(value)
-            block_lines.append(f"  {key} = {hcl_value}")
+            block_lines.append(f"{key} = {hcl_value}")
         block_lines.append("}\n")
         hcl_blocks.append("\n".join(block_lines))
 
