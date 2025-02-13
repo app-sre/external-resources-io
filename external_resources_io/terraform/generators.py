@@ -50,10 +50,10 @@ terraform {{
     )
 
 
-def create_variables_tf_file(
+def create_variables_tf_json_file(
     model: type[BaseModel], variables_file: str | None = None
 ) -> None:
-    """Generates Terraform variables json file."""
+    """Generates Terraform variables.tf.json file."""
     if not variables_file:
         variables_file = os.environ.get(
             "VARIABLES_TF_JSON_FILE", "./module/variables.tf.json"
@@ -64,10 +64,18 @@ def create_variables_tf_file(
     )
 
 
-def _generate_terraform_variables_from_model(model: type[BaseModel]) -> dict:
-    """Generates Terraform variables json."""
-    terraform_json: dict = {"variable": {}}
-    terraform_variables = terraform_json["variable"]
+def create_variables_tf_file(
+    model: type[BaseModel], variables_file: str | None = None
+) -> None:
+    """Generates Terraform variables.tf file."""
+    if not variables_file:
+        variables_file = os.environ.get(
+            "VARIABLES_TF_JSON_FILE", "./module/variables.tf"
+        )
+    Path(variables_file).write_text(
+        _convert_json_to_hcl(_generate_terraform_variables_from_model(model)),
+        encoding="utf-8",
+    )
 
 
 def _generate_fields(model: type[BaseModel]) -> dict[str, dict]:
@@ -158,10 +166,45 @@ def _get_terraform_type(python_type: Any) -> str:
     )
 
 
-def _generate_terraform_object_type(model: type[BaseModel]) -> str:
-    """Generates a Terraform object type with nested structures."""
-    fields = []
-    for field_name, field_info in model.model_fields.items():
-        field_type = _get_terraform_type(field_info.annotation)
-        fields.append(f"{field_name} = {field_type}")
-    return "{" + ",".join(fields) + "}"
+def _convert_json_value_to_hcl(value: Any) -> str:  # noqa: C901, PLR0911
+    """Converts a JSON value to HCL."""
+    if isinstance(value, str):
+        return f'"{value}"'
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int | float):
+        return str(value)
+    if isinstance(value, list):
+        if not value:
+            return "[]"
+        elements = []
+        for e in value:
+            elem = _convert_json_value_to_hcl(e)
+            elements.append(elem)
+        return "[\n" + "\n".join(elements) + "\n]"
+    if isinstance(value, dict):
+        if not value:
+            return "{}"
+        pairs = []
+        for k, v in value.items():
+            converted_v = _convert_json_value_to_hcl(v)
+            pairs.append(f"{k} = {converted_v}")
+        return "{\n" + "\n".join(pairs) + "\n}"
+    if value is None:
+        return "null"
+    return str(value)
+
+
+def _convert_json_to_hcl(data: dict) -> str:
+    variables = data.get("variable", {})
+    hcl_blocks = []
+
+    for var_name, var_config in variables.items():
+        block_lines = [f'variable "{var_name}" {{']
+        for key, value in var_config.items():
+            hcl_value = value if key == "type" else _convert_json_value_to_hcl(value)
+            block_lines.append(f"  {key} = {hcl_value}")
+        block_lines.append("}\n")
+        hcl_blocks.append("\n".join(block_lines))
+
+    return "\n".join(hcl_blocks)
