@@ -1,6 +1,7 @@
 # ruff: noqa: ANN401
 import json
 import os
+import subprocess
 from collections.abc import Sequence
 from pathlib import Path
 from types import UnionType
@@ -13,69 +14,76 @@ from external_resources_io.input import AppInterfaceProvision
 
 
 def create_tf_vars_json(
-    input_data: BaseModel,
-    vars_file: str | None = None,
-) -> None:
+    input_data: BaseModel, output_file: Path | str | None = None
+) -> Path:
     """Helper method to create teraform vars files. Used in terraform based ERv2 modules."""
-    if not vars_file:
-        vars_file = os.environ.get("TF_VARS_FILE", "./module/tfvars.json")
-    Path(vars_file).write_text(
+    if not output_file:
+        output_file = os.environ.get("TF_VARS_FILE", "./module/tfvars.json")
+    output = Path(output_file)
+    output.write_text(
         input_data.model_dump_json(
             exclude_none=True,
         ),
         encoding="utf-8",
     )
+    return output
 
 
 def create_backend_tf_file(
-    provision_data: AppInterfaceProvision,
-    backend_file: str | None = None,
-) -> None:
+    provision_data: AppInterfaceProvision, output_file: str | None = None
+) -> Path:
     """Helper method to create teraform backend configuration. Used in terraform based ERv2 modules."""
-    if not backend_file:
-        backend_file = os.environ.get("BACKEND_TF_FILE", "./module/backend.tf")
-    Path(backend_file).write_text(
-        f"""
-terraform {{
-  backend "s3" {{
-    bucket = "{provision_data.module_provision_data.tf_state_bucket}"
-    key    = "{provision_data.module_provision_data.tf_state_key}"
-    region = "{provision_data.module_provision_data.tf_state_region}"
-    dynamodb_table = "{provision_data.module_provision_data.tf_state_dynamodb_table}"
-    profile = "external-resources-state"
-  }}
-}}
-""",
+    if not output_file:
+        output_file = os.environ.get("BACKEND_TF_FILE", "./module/backend.tf")
+    output = Path(output_file)
+    output.write_text(
+        terraform_fmt(f"""
+            terraform {{
+              backend "s3" {{
+                bucket = "{provision_data.module_provision_data.tf_state_bucket}"
+                key    = "{provision_data.module_provision_data.tf_state_key}"
+                region = "{provision_data.module_provision_data.tf_state_region}"
+                dynamodb_table = "{provision_data.module_provision_data.tf_state_dynamodb_table}"
+                profile = "external-resources-state"
+              }}
+            }}"""),
         encoding="utf-8",
     )
+    return output
 
 
 def create_variables_tf_json_file(
-    model: type[BaseModel], variables_file: str | None = None
-) -> None:
+    model: type[BaseModel], output_file: Path | str | None = None
+) -> Path:
     """Generates Terraform variables.tf.json file."""
-    if not variables_file:
-        variables_file = os.environ.get(
+    if not output_file:
+        output_file = os.environ.get(
             "VARIABLES_TF_JSON_FILE", "./module/variables.tf.json"
         )
-    Path(variables_file).write_text(
+    output = Path(output_file)
+    output.write_text(
         json.dumps(_generate_terraform_variables_from_model(model)),
         encoding="utf-8",
     )
+    return output
 
 
 def create_variables_tf_file(
-    model: type[BaseModel], variables_file: str | None = None
-) -> None:
+    model: type[BaseModel], variables_file: Path | str | None = None
+) -> Path:
     """Generates Terraform variables.tf file."""
     if not variables_file:
         variables_file = os.environ.get(
             "VARIABLES_TF_JSON_FILE", "./module/variables.tf"
         )
-    Path(variables_file).write_text(
-        _convert_json_to_hcl(_generate_terraform_variables_from_model(model)),
+    output = Path(variables_file)
+    output.write_text(
+        terraform_fmt(
+            _convert_json_to_hcl(_generate_terraform_variables_from_model(model))
+        ),
         encoding="utf-8",
     )
+    return output
 
 
 def _generate_fields(model: type[BaseModel]) -> dict[str, dict]:
@@ -155,7 +163,7 @@ def _convert_basic_types(python_type: Any) -> str:  # noqa: PLR0911
 
 
 def _get_terraform_type(python_type: Any) -> str:
-    """Maps Python types to Terraform types using structural pattern matching."""
+    """Maps Python types to Terraform types."""
     origin = get_origin(python_type)
     args = get_args(python_type)
 
@@ -175,10 +183,10 @@ def _convert_json_value_to_hcl(value: Any) -> str:  # noqa: PLR0911
             return str(value).lower()
         case t if isinstance(t, int | float):
             return str(value)
-        case t if isinstance(t, list):
+        case t if isinstance(t, list | set):
             if not value:
                 return "[]"
-            return "[" + "\n".join(_convert_json_value_to_hcl(e) for e in value) + "]"
+            return "[" + ",".join(_convert_json_value_to_hcl(e) for e in value) + "]"
         case t if isinstance(t, dict):
             if not value:
                 return "{}"
@@ -206,3 +214,23 @@ def _convert_json_to_hcl(data: dict) -> str:
         hcl_blocks.append("\n".join(block_lines))
 
     return "\n".join(hcl_blocks)
+
+
+def terraform_available() -> bool:
+    try:
+        subprocess.run(["terraform", "--version"], check=True, capture_output=True)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
+def terraform_fmt(data: str) -> str:
+    if not terraform_available():
+        return data
+    return subprocess.run(
+        ["terraform", "fmt", "-"],
+        input=data,
+        text=True,
+        check=True,
+        capture_output=True,
+    ).stdout
