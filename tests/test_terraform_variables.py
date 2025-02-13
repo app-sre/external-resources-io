@@ -10,10 +10,12 @@ from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 
 from external_resources_io.terraform.generators import (
+    _convert_json_to_hcl,
     _generate_terraform_variable,
     _generate_terraform_variables_from_model,
     _get_terraform_type,
     create_variables_tf_file,
+    create_variables_tf_json_file,
 )
 
 
@@ -48,7 +50,7 @@ class SampleModel(BaseModel):
     default_nested: NestedModel = NestedModel(numeric=0)
 
 
-VARIABLES_TF = {
+VARIABLES_TF_DICT = {
     "variable": {
         "name": {
             "type": "string",
@@ -101,6 +103,70 @@ VARIABLES_TF = {
     }
 }
 
+VARIABLES_TF = """
+variable "name" {
+    type = string
+}
+
+variable "str_with_default" {
+  type    = string
+  default = "default"
+}
+
+variable "counter" {
+  type    = number
+  default = 0
+}
+
+variable "enabled" {
+  type    = bool
+  default = true
+}
+
+variable "tags" {
+  type    = map(any)
+  default = null
+}
+
+variable "variants" {
+  type = list(string)
+  default = [
+    "default"
+  ]
+}
+
+variable "mode" {
+  type    = string
+  default = "auto"
+}
+
+variable "nested" {
+  type = object({ field = string, numeric = number })
+}
+
+variable "optional_nested" {
+  type    = object({ field = string, numeric = number })
+  default = null
+}
+
+variable "optional" {
+  type    = string
+  default = null
+}
+
+variable "nested_nested" {
+  type = list(object({ nested_items = list(object({ field = string, numeric = number })) }))
+}
+
+variable "default_nested" {
+  type = object({ field = string, numeric = number })
+  default = {
+    field   = "default"
+    numeric = 0
+  }
+}
+""".lstrip("\n")
+
 
 @pytest.fixture
 def sample_model() -> type[BaseModel]:
@@ -113,6 +179,16 @@ def terraform_executable() -> bool:
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False
+
+
+def terraform_fmt(data: str) -> str:
+    return subprocess.run(
+        ["terraform", "fmt", "-"],
+        input=data,
+        text=True,
+        check=True,
+        capture_output=True,
+    ).stdout
 
 
 @pytest.mark.parametrize(
@@ -155,14 +231,35 @@ def test_generate_terraform_variable(
 
 def test_generate_terraform_variables_from_model(sample_model: type[BaseModel]) -> None:
     output = _generate_terraform_variables_from_model(sample_model)
-    assert output == VARIABLES_TF
+    assert output == VARIABLES_TF_DICT
+
+
+@pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
+def test_create_variables_tf_json_file(
+    tmp_path: Path, sample_model: type[BaseModel]
+) -> None:
+    tf_file = tmp_path / "variables.tf.json"
+    create_variables_tf_json_file(sample_model, str(tf_file))
+    # Validate the generated file
+    subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
+
+
+@pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
+def test_convert_json_to_hcl(sample_model: type[BaseModel]) -> None:
+    output = terraform_fmt(
+        _convert_json_to_hcl(_generate_terraform_variables_from_model(sample_model))
+    )
+    expected = terraform_fmt(VARIABLES_TF)
+    assert output == expected
 
 
 @pytest.mark.skipif(not terraform_executable(), reason="Terraform not installed")
 def test_create_variables_tf_file(
     tmp_path: Path, sample_model: type[BaseModel]
 ) -> None:
-    tf_file = tmp_path / "variables.tf.json"
+    tf_file = tmp_path / "variables.tf"
     create_variables_tf_file(sample_model, str(tf_file))
+    # Format the generated file
+    subprocess.run(["terraform", f"-chdir={tmp_path}", "fmt"], check=True)
     # Validate the generated file
     subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
