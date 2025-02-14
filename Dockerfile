@@ -14,7 +14,7 @@ RUN uv lock --locked
 
 COPY tests ./tests
 COPY external_resources_io ./external_resources_io
-RUN uv sync --frozen
+RUN make dev-venv
 
 
 #
