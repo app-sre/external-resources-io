@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -40,15 +41,16 @@ def test_create_backend_tf_file(
     assert temp_file.read_text() == terraform_fmt(
         """
         terraform {
-            backend "s3" {
+          backend "s3" {
             bucket = "test-external-resources-state"
             key    = "aws/ter-int-dev/aws-iam-role/test-external-resources-iam-role/terraform.state"
             region = "us-east-1"
             dynamodb_table = "test-external-resources-lock"
             profile = "external-resources-state"
-            }
+          }
         }"""
     )
+    subprocess.run(["terraform", f"-chdir={temp_file.parent}", "validate"], check=True)
 
 
 def test_create_backend_tf_file_output_env_var(
