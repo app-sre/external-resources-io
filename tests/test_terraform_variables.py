@@ -265,7 +265,7 @@ def test_create_variables_tf_json_file(
     create_variables_tf_json_file(sample_model, str(tf_file))
     assert tf_file.exists()
     # Validate the generated file
-    subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
+    subprocess.run(["terraform", f"-chdir={tmp_path}", "validate"], check=True)
 
 
 def test_create_variables_tf_json_file_output_env_var(
@@ -297,7 +297,7 @@ def test_create_variables_tf_file(
         # Format the generated file
         subprocess.run(["terraform", f"-chdir={tmp_path}", "fmt"], check=True)
         # Validate the generated file
-        subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
+        subprocess.run(["terraform", f"-chdir={tmp_path}", "validate"], check=True)
 
 
 def test_create_variables_tf_file_output_env_var(
