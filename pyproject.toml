@@ -1,12 +1,15 @@
 [project]
 name = "external-resources-io"
-version = "0.4.1"
+version = "0.5.0"
 requires-python = ">=3.11"
 description = "Util classes for AppSRE External Resources system"
 license = { text = "Apache 2.0" }
 readme = "README.md"
 authors = [{ name = "Jordi Piriz", email = "jpiriz@redhat.com" }]
 dependencies = ["pydantic >=2.10.0"]
+
+[project.scripts]
+external-resources-io = 'external_resources_io.cli:app'
 
 [project.urls]
 homepage = "https://github.com/app-sre/external-resources-io"
@@ -21,6 +24,10 @@ dev = [
     "pytest-cov ~=6.0",
     "ruff ~=0.8",
 ]
+
+[project.optional-dependencies]
+cli = ["typer>=0.15.1"]
+
 
 [build-system]
 requires = ["hatchling"]
@@ -72,6 +79,8 @@ ignore = [
     "EM102",   # Exception must not use an f-string literal, assign to variable first
     "TRY003",  # Avoid specifying long messages outside the exception class
     "TRY300",  # try-consider-else
+    "S603",    # subprocess.run
+    "S607",    # subprocess.run
     # pydoclint
     "DOC",
     # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
@@ -108,4 +117,4 @@ branch = true
 omit = ["*/tests/*"]
 
 [tool.coverage.report]
-fail_under = 30
+fail_under = 90

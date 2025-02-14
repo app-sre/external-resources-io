@@ -33,3 +33,23 @@ make test
 ## Releasing
 
 Bump the version number in `pyproject.toml` and merge your PR. The release will be automatically published to PyPI via the Konflux CI/CD pipeline.
+
+## End User CLI
+
+This library provides a CLI to interact with the External Resources IO module. The CLI is automatically installed when you install the `cli` extra package:
+
+```sh
+uv add --group dev external-resources-io[cli]
+```
+
+You can now use the `external-resources-io` command to interact with the module.
+
+```sh
+external-resources-io --help
+```
+
+For example, generate a `variables.tf` Terraform HCL file based on your app-interface input model:
+
+```sh
+external-resources-io external-resources-io tf generate-variables-tf er_aws_elasticache.app_interface_input.AppInterfaceInput
+```

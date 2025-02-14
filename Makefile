@@ -12,7 +12,7 @@ test:
 
 .PHONY: dev-venv
 dev-venv:
-	uv sync --python 3.11
+	uv sync --python 3.11 --extra cli
 
 # do not print pypi commands to avoid the token leaking to the logs
 .SILENT: pypi
