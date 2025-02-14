@@ -12,10 +12,22 @@ from pydantic_core import PydanticUndefined
 
 from external_resources_io.input import AppInterfaceProvision
 
+TF_VARS_FILE_ENV_VAR = "TF_VARS_FILE"
+BACKEND_TF_FILE_ENV_VAR = "BACKEND_TF_FILE"
+VARIABLES_TF_JSON_FILE_ENV_VAR = "VARIABLES_TF_JSON_FILE"
+VARIABLES_TF_FILE_ENV_VAR = "VARIABLES_TF_FILE"
+
 DEFAULT_TF_VARS_FILE = "./module/tfvars.json"
 DEFAULT_BACKEND_TF_FILE = "./module/backend.tf"
 DEFAULT_VARIABLES_TF_JSON_FILE = "./module/variables.tf.json"
 DEFAULT_VARIABLES_TF_FILE = "./module/variables.tf"
+
+
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 def create_tf_vars_json(
@@ -23,7 +35,7 @@ def create_tf_vars_json(
 ) -> Path:
     """Helper method to create teraform vars files. Used in terraform based ERv2 modules."""
     if not output_file:
-        output_file = os.environ.get("TF_VARS_FILE", DEFAULT_TF_VARS_FILE)
+        output_file = os.environ.get(TF_VARS_FILE_ENV_VAR, DEFAULT_TF_VARS_FILE)
     output = Path(output_file)
     output.write_text(
         input_data.model_dump_json(
@@ -39,7 +51,7 @@ def create_backend_tf_file(
 ) -> Path:
     """Helper method to create teraform backend configuration. Used in terraform based ERv2 modules."""
     if not output_file:
-        output_file = os.environ.get("BACKEND_TF_FILE", DEFAULT_BACKEND_TF_FILE)
+        output_file = os.environ.get(BACKEND_TF_FILE_ENV_VAR, DEFAULT_BACKEND_TF_FILE)
     output = Path(output_file)
     output.write_text(
         terraform_fmt(f"""
@@ -63,11 +75,11 @@ def create_variables_tf_json_file(
     """Generates Terraform variables.tf.json file."""
     if not output_file:
         output_file = os.environ.get(
-            "VARIABLES_TF_JSON_FILE", DEFAULT_VARIABLES_TF_JSON_FILE
+            VARIABLES_TF_JSON_FILE_ENV_VAR, DEFAULT_VARIABLES_TF_JSON_FILE
         )
     output = Path(output_file)
     output.write_text(
-        json.dumps(_generate_terraform_variables_from_model(model)),
+        json.dumps(_generate_terraform_variables_from_model(model), cls=SetEncoder),
         encoding="utf-8",
     )
     return output
@@ -78,7 +90,9 @@ def create_variables_tf_file(
 ) -> Path:
     """Generates Terraform variables.tf file."""
     if not variables_file:
-        variables_file = os.environ.get("VARIABLES_TF_FILE", DEFAULT_VARIABLES_TF_FILE)
+        variables_file = os.environ.get(
+            VARIABLES_TF_FILE_ENV_VAR, DEFAULT_VARIABLES_TF_FILE
+        )
     output = Path(variables_file)
     output.write_text(
         terraform_fmt(
