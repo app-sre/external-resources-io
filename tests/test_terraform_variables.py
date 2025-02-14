@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 
 from external_resources_io.terraform.generators import (
+    VARIABLES_TF_FILE_ENV_VAR,
+    VARIABLES_TF_JSON_FILE_ENV_VAR,
     _convert_json_to_hcl,
     _generate_terraform_variable,
     _generate_terraform_variables_from_model,
@@ -42,6 +44,9 @@ class SampleModel(BaseModel):
     str_with_default: str = "default"
     counter: int = 0
     enabled: bool = True
+    empty_list: list[int] = []
+    empty_set: set[int] = set()
+    empty_dict: dict[str, int] = {}
     tags: dict[str, Any] | None = None
     variants: list[str] = ["foo", "bar"]
     mode: Literal["auto", "manual"] = "auto"
@@ -50,6 +55,7 @@ class SampleModel(BaseModel):
     optional: str | None = None
     nested_nested: Sequence[NestedNestedModel]
     default_nested: NestedModel = NestedModel(numeric=0)
+    none_none: str | bytes = ""
 
 
 VARIABLES_TF_DICT = {
@@ -68,6 +74,18 @@ VARIABLES_TF_DICT = {
         "enabled": {
             "type": "bool",
             "default": True,
+        },
+        "empty_dict": {
+            "default": {},
+            "type": "map(number)",
+        },
+        "empty_list": {
+            "default": [],
+            "type": "list(number)",
+        },
+        "empty_set": {
+            "default": set(),
+            "type": "set(number)",
         },
         "tags": {
             "type": "map(any)",
@@ -102,6 +120,10 @@ VARIABLES_TF_DICT = {
             },
             "type": "object({field = string,numeric = number})",
         },
+        "none_none": {
+            "type": "any",
+            "default": "",
+        },
     }
 }
 
@@ -117,6 +139,21 @@ variable "default_nested" {
     field   = "default"
     numeric = 0
   }
+}
+
+variable "empty_dict" {
+  type    = map(number)
+  default = {}
+}
+
+variable "empty_list" {
+  type    = list(number)
+  default = []
+}
+
+variable "empty_set" {
+  type    = set(number)
+  default = []
 }
 
 variable "enabled" {
@@ -139,6 +176,11 @@ variable "nested" {
 
 variable "nested_nested" {
   type = list(object({ nested_items = list(object({ field = string, numeric = number })) }))
+}
+
+variable "none_none" {
+  type    = any
+  default = ""
 }
 
 variable "optional" {
@@ -221,8 +263,20 @@ def test_create_variables_tf_json_file(
 ) -> None:
     tf_file = tmp_path / "variables.tf.json"
     create_variables_tf_json_file(sample_model, str(tf_file))
+    assert tf_file.exists()
     # Validate the generated file
     subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
+
+
+def test_create_variables_tf_json_file_output_env_var(
+    tmp_path: Path,
+    sample_model: type[BaseModel],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tf_file = tmp_path / "variables.tf.json"
+    monkeypatch.setenv(VARIABLES_TF_JSON_FILE_ENV_VAR, str(tf_file))
+    create_variables_tf_json_file(sample_model)
+    assert tf_file.exists()
 
 
 def test_convert_json_to_hcl(sample_model: type[BaseModel]) -> None:
@@ -238,8 +292,20 @@ def test_create_variables_tf_file(
 ) -> None:
     tf_file = tmp_path / "variables.tf"
     create_variables_tf_file(sample_model, str(tf_file))
+    assert tf_file.exists()
     if terraform_available():
         # Format the generated file
         subprocess.run(["terraform", f"-chdir={tmp_path}", "fmt"], check=True)
         # Validate the generated file
         subprocess.run(["terraform", f"-chdir={tmp_path}", "init"], check=True)
+
+
+def test_create_variables_tf_file_output_env_var(
+    tmp_path: Path,
+    sample_model: type[BaseModel],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tf_file = tmp_path / "variables.tf"
+    monkeypatch.setenv(VARIABLES_TF_FILE_ENV_VAR, str(tf_file))
+    create_variables_tf_file(sample_model)
+    assert tf_file.exists()
