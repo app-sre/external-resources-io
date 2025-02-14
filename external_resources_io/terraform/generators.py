@@ -208,9 +208,9 @@ def _convert_json_to_hcl(data: dict) -> str:
     variables = data.get("variable", {})
     hcl_blocks = []
 
-    for var_name in sorted(variables):
+    for var_name, var_config in sorted(variables.items()):
         block_lines = [f'variable "{var_name}" {{']
-        for key, value in variables[var_name].items():
+        for key, value in var_config.items():
             hcl_value = value if key == "type" else _convert_json_value_to_hcl(value)
             block_lines.append(f"{key} = {hcl_value}")
         block_lines.append("}\n")
