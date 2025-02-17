@@ -104,21 +104,6 @@ def test_generate_variables_tf(
     assert output_file.exists()
 
 
-def test_generate_variables_tf_json(
-    cli_runner: CliRunner, app_interface_input_class: str, output_file: Path
-) -> None:
-    cli_runner.invoke(
-        tf_app,
-        [
-            "generate-variables-tf-json",
-            app_interface_input_class,
-            "--output",
-            str(output_file),
-        ],
-    )
-    assert output_file.exists()
-
-
 def test_generate_backend_tf(
     cli_runner: CliRunner,
     app_interface_input_class: str,

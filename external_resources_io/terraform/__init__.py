@@ -2,7 +2,6 @@ from .generators import (
     create_backend_tf_file,
     create_tf_vars_json,
     create_variables_tf_file,
-    create_variables_tf_json_file,
 )
 from .plan import (
     Action,
@@ -25,5 +24,4 @@ __all__ = [
     "create_backend_tf_file",
     "create_tf_vars_json",
     "create_variables_tf_file",
-    "create_variables_tf_json_file",
 ]

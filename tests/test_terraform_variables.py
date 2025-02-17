@@ -11,13 +11,11 @@ from pydantic_core import PydanticUndefined
 
 from external_resources_io.terraform.generators import (
     VARIABLES_TF_FILE_ENV_VAR,
-    VARIABLES_TF_JSON_FILE_ENV_VAR,
     _convert_json_to_hcl,
     _generate_terraform_variable,
     _generate_terraform_variables_from_model,
     _get_terraform_type,
     create_variables_tf_file,
-    create_variables_tf_json_file,
     terraform_available,
     terraform_fmt,
 )
@@ -256,27 +254,6 @@ def test_generate_terraform_variable(
 def test_generate_terraform_variables_from_model(sample_model: type[BaseModel]) -> None:
     output = _generate_terraform_variables_from_model(sample_model)
     assert output == VARIABLES_TF_DICT
-
-
-def test_create_variables_tf_json_file(
-    tmp_path: Path, sample_model: type[BaseModel]
-) -> None:
-    tf_file = tmp_path / "variables.tf.json"
-    create_variables_tf_json_file(sample_model, str(tf_file))
-    assert tf_file.exists()
-    # Validate the generated file
-    subprocess.run(["terraform", f"-chdir={tmp_path}", "validate"], check=True)
-
-
-def test_create_variables_tf_json_file_output_env_var(
-    tmp_path: Path,
-    sample_model: type[BaseModel],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    tf_file = tmp_path / "variables.tf.json"
-    monkeypatch.setenv(VARIABLES_TF_JSON_FILE_ENV_VAR, str(tf_file))
-    create_variables_tf_json_file(sample_model)
-    assert tf_file.exists()
 
 
 def test_convert_json_to_hcl(sample_model: type[BaseModel]) -> None:

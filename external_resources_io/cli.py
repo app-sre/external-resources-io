@@ -12,11 +12,9 @@ from external_resources_io.input import (
 from external_resources_io.terraform.generators import (
     DEFAULT_BACKEND_TF_FILE,
     DEFAULT_VARIABLES_TF_FILE,
-    DEFAULT_VARIABLES_TF_JSON_FILE,
     create_backend_tf_file,
     create_tf_vars_json,
     create_variables_tf_file,
-    create_variables_tf_json_file,
 )
 
 try:
@@ -92,31 +90,6 @@ def generate_variables_tf(
 ) -> None:
     """Generates Terraform variables.tf file."""
     create_variables_tf_file(
-        _get_app_interface_data_class(app_interface_input_class), output
-    )
-
-
-@tf_app.command()
-def generate_variables_tf_json(
-    app_interface_input_class: Annotated[
-        str,
-        typer.Argument(
-            help="App interface input class. E.g. your_module_name.input.AppInterfaceInput",
-            show_default=False,
-        ),
-    ],
-    output: Annotated[
-        Path | None,
-        typer.Option(
-            help="Output file",
-            dir_okay=False,
-            writable=True,
-            envvar="VARIABLES_TF_JSON_FILE",
-        ),
-    ] = Path(DEFAULT_VARIABLES_TF_JSON_FILE),
-) -> None:
-    """Generates Terraform variables.tf.json file."""
-    create_variables_tf_json_file(
         _get_app_interface_data_class(app_interface_input_class), output
     )
 
