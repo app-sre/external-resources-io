@@ -14,13 +14,23 @@ RUN uv lock --locked
 
 COPY tests ./tests
 COPY external_resources_io ./external_resources_io
-RUN uv sync --frozen
+RUN make dev-venv
 
 
 #
 # Test image
 #
 FROM base AS test
+
+# Install Terraform for testing
+RUN curl -sfL https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip \
+    -o terraform.zip && \
+    unzip terraform.zip && \
+    mkdir -p $HOME/bin && \
+    mv terraform $HOME/bin/terraform && \
+    rm terraform.zip
+
+ENV PATH=$HOME/bin:$PATH
 RUN make test
 
 
