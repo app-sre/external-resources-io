@@ -52,7 +52,7 @@ def create_backend_tf_file(
         output_file = os.environ.get(BACKEND_TF_FILE_ENV_VAR, DEFAULT_BACKEND_TF_FILE)
     output = Path(output_file)
     output.write_text(
-        terraform_fmt(f"""
+        terraform_fmt(f"""\
             terraform {{
               backend "s3" {{
                 bucket = "{provision_data.module_provision_data.tf_state_bucket}"
