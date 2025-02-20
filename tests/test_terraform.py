@@ -38,18 +38,18 @@ def test_create_backend_tf_file(
     provision_data: AppInterfaceProvision, temp_file: Path
 ) -> None:
     create_backend_tf_file(provision_data, temp_file)
-    assert temp_file.read_text() == terraform_fmt(
-        """
-        terraform {
-          backend "s3" {
-            bucket = "test-external-resources-state"
-            key    = "aws/ter-int-dev/aws-iam-role/test-external-resources-iam-role/terraform.state"
-            region = "us-east-1"
-            dynamodb_table = "test-external-resources-lock"
-            profile = "external-resources-state"
-          }
-        }"""
-    )
+    expected_text = """\
+terraform {
+  backend "s3" {
+    bucket         = "test-external-resources-state"
+    key            = "aws/ter-int-dev/aws-iam-role/test-external-resources-iam-role/terraform.state"
+    region         = "us-east-1"
+    dynamodb_table = "test-external-resources-lock"
+    profile        = "external-resources-state"
+  }
+}
+"""
+    assert temp_file.read_text() == expected_text == terraform_fmt(expected_text)
     subprocess.run(["terraform", f"-chdir={temp_file.parent}", "validate"], check=True)
 
 
