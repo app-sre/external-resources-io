@@ -21,14 +21,15 @@ class SetEncoder(json.JSONEncoder):
 
 
 def create_tf_vars_json(
-    input_data: BaseModel, output_file: Path | str | None = None
+    input_data: BaseModel,
+    output_file: Path | str | None = None,
+    *,
+    exclude_none: bool = True,
 ) -> Path:
     """Helper method to create teraform vars files. Used in terraform based ERv2 modules."""
     output = Path(output_file or Config().tf_vars_file)
     output.write_text(
-        input_data.model_dump_json(
-            exclude_none=True,
-        ),
+        input_data.model_dump_json(exclude_none=exclude_none),
         encoding="utf-8",
     )
     return output
