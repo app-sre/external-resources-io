@@ -22,7 +22,7 @@ def test_read_input_from_file_env_var(
 ) -> None:
     input_json = tmp_path / "input.json"
     input_json.write_text(json.dumps(ai_data))
-    monkeypatch.setenv("ER_INPUT_FILE", str(input_json.absolute()))
+    monkeypatch.setenv("INPUT_FILE", str(input_json.absolute()))
 
     input_data = read_input_from_file()
     assert input_data == ai_data
