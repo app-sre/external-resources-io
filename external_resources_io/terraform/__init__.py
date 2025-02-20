@@ -12,6 +12,7 @@ from .plan import (
     ResourceChange,
     TerraformJsonPlanParser,
 )
+from .run import terraform_run
 
 __all__ = [
     "Action",
@@ -24,4 +25,5 @@ __all__ = [
     "create_backend_tf_file",
     "create_tf_vars_json",
     "create_variables_tf_file",
+    "terraform_run",
 ]

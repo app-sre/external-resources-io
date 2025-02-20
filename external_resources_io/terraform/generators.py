@@ -1,6 +1,5 @@
 # ruff: noqa: ANN401
 import json
-import subprocess
 from collections.abc import Sequence
 from pathlib import Path
 from types import UnionType
@@ -11,6 +10,7 @@ from pydantic_core import PydanticUndefined
 
 from external_resources_io.config import Config
 from external_resources_io.input import AppInterfaceProvision
+from external_resources_io.terraform.run import terraform_fmt
 
 
 class SetEncoder(json.JSONEncoder):
@@ -197,23 +197,3 @@ def _convert_json_to_hcl(data: dict) -> str:
         hcl_blocks.append("\n".join(block_lines))
 
     return "\n".join(hcl_blocks)
-
-
-def terraform_available() -> bool:
-    try:
-        subprocess.run(["terraform", "--version"], check=True, capture_output=True)
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return False
-
-
-def terraform_fmt(data: str) -> str:
-    if not terraform_available():
-        return data
-    return subprocess.run(
-        ["terraform", "fmt", "-"],
-        input=data,
-        text=True,
-        check=True,
-        capture_output=True,
-    ).stdout

@@ -16,6 +16,8 @@ from external_resources_io.terraform.generators import (
     _generate_terraform_variables_from_model,
     _get_terraform_type,
     create_variables_tf_file,
+)
+from external_resources_io.terraform.run import (
     terraform_available,
     terraform_fmt,
 )
