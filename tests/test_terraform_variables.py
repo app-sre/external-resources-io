@@ -9,7 +9,7 @@ import pytest
 from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 
-from external_resources_io.config import get_env_var_name
+from external_resources_io.config import EnvVar
 from external_resources_io.terraform.generators import (
     _convert_json_to_hcl,
     _generate_terraform_variable,
@@ -285,6 +285,6 @@ def test_create_variables_tf_file_output_env_var(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     tf_file = tmp_path / "variables.tf"
-    monkeypatch.setenv(get_env_var_name("variables_tf_file"), str(tf_file))
+    monkeypatch.setenv(EnvVar.VARIABLES_TF_FILE, str(tf_file))
     create_variables_tf_file(sample_model)
     assert tf_file.exists()

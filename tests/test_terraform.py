@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from external_resources_io.config import get_env_var_name
+from external_resources_io.config import EnvVar
 from external_resources_io.input import AppInterfaceProvision
 from external_resources_io.terraform.generators import (
     create_backend_tf_file,
@@ -29,7 +29,7 @@ def test_tf_vars_json(data: BaseModel, temp_file: Path) -> None:
 def test_tf_vars_json_output_env_var(
     data: BaseModel, temp_file: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv(get_env_var_name("tf_vars_file"), str(temp_file))
+    monkeypatch.setenv(EnvVar.TF_VARS_FILE, str(temp_file))
     create_tf_vars_json(data)
     assert temp_file.exists()
 
@@ -58,7 +58,7 @@ def test_create_backend_tf_file_output_env_var(
     temp_file: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv(get_env_var_name("backend_tf_file"), str(temp_file))
+    monkeypatch.setenv(EnvVar.BACKEND_TF_FILE, str(temp_file))
     create_backend_tf_file(provision_data)
     assert temp_file.exists()
 

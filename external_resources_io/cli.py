@@ -4,7 +4,7 @@ from typing import Annotated, Protocol, cast
 
 from pydantic import BaseModel
 
-from external_resources_io.config import Config, get_env_var_name
+from external_resources_io.config import Config, EnvVar
 from external_resources_io.input import (
     AppInterfaceProvision,
     parse_model,
@@ -84,7 +84,7 @@ def generate_variables_tf(
             help="Output file",
             dir_okay=False,
             writable=True,
-            envvar=get_env_var_name("variables_tf_file"),
+            envvar=EnvVar.OUTPUTS_FILE,
         ),
     ] = Path(config.variables_tf_file),
 ) -> None:
@@ -110,7 +110,7 @@ def generate_backend_tf(
             show_default=False,
             readable=True,
             file_okay=True,
-            envvar=get_env_var_name("input_file"),
+            envvar=EnvVar.INPUT_FILE,
         ),
     ],
     output: Annotated[
@@ -119,7 +119,7 @@ def generate_backend_tf(
             help="Output file",
             dir_okay=False,
             writable=True,
-            envvar=get_env_var_name("backend_tf_file"),
+            envvar=EnvVar.OUTPUTS_FILE,
         ),
     ] = Path(config.backend_tf_file),
 ) -> None:
@@ -144,7 +144,7 @@ def generate_tf_vars_json(
             show_default=False,
             readable=True,
             file_okay=True,
-            envvar=get_env_var_name("input_file"),
+            envvar=EnvVar.INPUT_FILE,
         ),
     ],
     output: Annotated[
@@ -153,7 +153,7 @@ def generate_tf_vars_json(
             help="Output file",
             dir_okay=False,
             writable=True,
-            envvar=get_env_var_name("tf_vars_file"),
+            envvar=EnvVar.OUTPUTS_FILE,
         ),
     ] = Path(config.tf_vars_file),
 ) -> None:
