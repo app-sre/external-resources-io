@@ -1,5 +1,5 @@
 from pydantic import field_validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, EnvSettingsSource
 
 
 class Config(BaseSettings):
@@ -27,5 +27,15 @@ class Config(BaseSettings):
         return v.lower()
 
 
+_env_settings = EnvSettingsSource(
+    Config,
+    case_sensitive=False,  # we want to user UPPERCASE env variable names only
+    env_prefix=Config.model_config["env_prefix"],
+    env_nested_delimiter=Config.model_config["env_nested_delimiter"],
+)
+
+
 def get_env_var_name(field_name: str) -> str:
-    return Config.model_fields[field_name].alias or field_name.upper()
+    return _env_settings._extract_field_info(  # noqa: SLF001
+        Config.model_fields[field_name], field_name
+    )[0][1].upper()  # we want to user UPPERCASE env variable names only
