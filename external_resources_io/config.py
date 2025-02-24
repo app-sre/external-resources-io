@@ -1,12 +1,19 @@
+from enum import StrEnum
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, EnvSettingsSource
+
+
+class Action(StrEnum):
+    APPLY = "apply"
+    DESTROY = "destroy"
 
 
 class Config(BaseSettings):
     """Environment Variables."""
 
     # general settings
-    action: str = "Apply"
+    action: Action = Action.APPLY
     dry_run: bool = True
     log_level: str = "INFO"
 
@@ -22,8 +29,8 @@ class Config(BaseSettings):
 
     @field_validator("action", mode="before")
     @classmethod
-    def lower_action(cls, v: str) -> str:
-        """Transform the action to lowercase."""
+    def action_lower(cls, v: str) -> str:
+        """Always lower action string to match with Action enum."""
         return v.lower()
 
 
