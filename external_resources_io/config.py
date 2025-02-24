@@ -24,7 +24,7 @@ class Config(BaseSettings):
     outputs_file: str = "tmp/outputs.json"
     plan_file_json: str = "tmp/plan.json"
     terraform_cmd: str = "terraform"
-    tf_vars_file: str = "module/tfvars.json"
+    tf_vars_file: str = "module/terraform.tfvars.json"
     variables_tf_file: str = "module/variables.tf"
 
     @field_validator("action", mode="before")
