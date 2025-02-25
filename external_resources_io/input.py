@@ -7,6 +7,8 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
+from external_resources_io.config import Config
+
 
 class TerraformProvisionOptions(BaseModel):
     tf_state_bucket: str
@@ -34,9 +36,9 @@ def parse_model(model_class: type[T], data: Mapping[str, Any]) -> T:
 
 
 def read_input_from_file(file_path: Path | str | None = None) -> dict[str, Any]:
-    if not file_path:
-        file_path = os.environ.get("ER_INPUT_FILE", "/inputs/input.json")
-    return json.loads(Path(file_path).read_text(encoding="utf-8"))
+    return json.loads(
+        Path(file_path or Config().input_file).read_text(encoding="utf-8")
+    )
 
 
 def read_input_from_env_var(var: str = "INPUT") -> dict[str, Any]:

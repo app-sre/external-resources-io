@@ -4,14 +4,14 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
+from external_resources_io.config import EnvVar
 from external_resources_io.input import AppInterfaceProvision
 from external_resources_io.terraform.generators import (
-    BACKEND_TF_FILE_ENV_VAR,
-    TF_VARS_FILE_ENV_VAR,
     create_backend_tf_file,
     create_tf_vars_json,
     terraform_fmt,
 )
+from external_resources_io.terraform.run import terraform_run
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def test_tf_vars_json(data: BaseModel, temp_file: Path) -> None:
 def test_tf_vars_json_output_env_var(
     data: BaseModel, temp_file: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv(TF_VARS_FILE_ENV_VAR, str(temp_file))
+    monkeypatch.setenv(EnvVar.TF_VARS_FILE, str(temp_file))
     create_tf_vars_json(data)
     assert temp_file.exists()
 
@@ -58,6 +58,19 @@ def test_create_backend_tf_file_output_env_var(
     temp_file: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv(BACKEND_TF_FILE_ENV_VAR, str(temp_file))
+    monkeypatch.setenv(EnvVar.BACKEND_TF_FILE, str(temp_file))
     create_backend_tf_file(provision_data)
     assert temp_file.exists()
+
+
+def test_terraform_run(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TERRAFORM_CMD", "echo")
+    monkeypatch.setenv("DRY_RUN", "0")
+    assert terraform_run(["foo bar"]) == "foo bar\n"
+    assert terraform_run(["version"], dry_run=True) == ""  # noqa: PLC1901
+
+
+def test_terraform_run_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TERRAFORM_CMD", "ls")
+    with pytest.raises(subprocess.CalledProcessError):
+        terraform_run(["what ever - will throw an error"], dry_run=False)

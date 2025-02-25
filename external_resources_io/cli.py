@@ -4,14 +4,13 @@ from typing import Annotated, Protocol, cast
 
 from pydantic import BaseModel
 
+from external_resources_io.config import Config, EnvVar
 from external_resources_io.input import (
     AppInterfaceProvision,
     parse_model,
     read_input_from_file,
 )
 from external_resources_io.terraform.generators import (
-    DEFAULT_BACKEND_TF_FILE,
-    DEFAULT_VARIABLES_TF_FILE,
     create_backend_tf_file,
     create_tf_vars_json,
     create_variables_tf_file,
@@ -28,6 +27,7 @@ except ImportError:
 app = typer.Typer()
 tf_app = typer.Typer()
 app.add_typer(tf_app, name="tf")
+config = Config()
 
 
 class AppInterfaceInputInterface(Protocol):
@@ -84,9 +84,9 @@ def generate_variables_tf(
             help="Output file",
             dir_okay=False,
             writable=True,
-            envvar="VARIABLES_TF_FILE",
+            envvar=EnvVar.OUTPUTS_FILE,
         ),
-    ] = Path(DEFAULT_VARIABLES_TF_FILE),
+    ] = Path(config.variables_tf_file),
 ) -> None:
     """Generates Terraform variables.tf file."""
     create_variables_tf_file(
@@ -110,7 +110,7 @@ def generate_backend_tf(
             show_default=False,
             readable=True,
             file_okay=True,
-            envvar="ER_INPUT_FILE",
+            envvar=EnvVar.INPUT_FILE,
         ),
     ],
     output: Annotated[
@@ -119,9 +119,9 @@ def generate_backend_tf(
             help="Output file",
             dir_okay=False,
             writable=True,
-            envvar="BACKEND_TF_FILE",
+            envvar=EnvVar.OUTPUTS_FILE,
         ),
-    ] = Path(DEFAULT_BACKEND_TF_FILE),
+    ] = Path(config.backend_tf_file),
 ) -> None:
     """Generates Terraform backends.tf file."""
     ai_input = _get_ai_input(app_interface_input_class, input_file)
@@ -144,7 +144,7 @@ def generate_tf_vars_json(
             show_default=False,
             readable=True,
             file_okay=True,
-            envvar="ER_INPUT_FILE",
+            envvar=EnvVar.INPUT_FILE,
         ),
     ],
     output: Annotated[
@@ -153,9 +153,9 @@ def generate_tf_vars_json(
             help="Output file",
             dir_okay=False,
             writable=True,
-            envvar="BACKEND_TF_FILE",
+            envvar=EnvVar.OUTPUTS_FILE,
         ),
-    ] = Path(DEFAULT_BACKEND_TF_FILE),
+    ] = Path(config.tf_vars_file),
 ) -> None:
     """Generates Terraform tfvars.json file."""
     ai_input = _get_ai_input(app_interface_input_class, input_file)

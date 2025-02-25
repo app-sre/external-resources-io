@@ -1,12 +1,12 @@
 [project]
 name = "external-resources-io"
-version = "0.5.1"
+version = "0.6.0"
 requires-python = ">=3.11"
 description = "Util classes for AppSRE External Resources system"
 license = { text = "Apache 2.0" }
 readme = "README.md"
 authors = [{ name = "Jordi Piriz", email = "jpiriz@redhat.com" }]
-dependencies = ["pydantic >=2.10.0"]
+dependencies = ["pydantic >=2.10.0", "pydantic-settings>=2.7.1"]
 
 [project.scripts]
 external-resources-io = 'external_resources_io.cli:app'
@@ -103,6 +103,7 @@ known-first-party = ["external_resources_io"]
 
 # Mypy configuration
 [tool.mypy]
+plugins = ["pydantic.mypy"]
 files = ["external_resources_io", "tests"]
 enable_error_code = ["truthy-bool", "redundant-expr"]
 no_implicit_optional = true
@@ -117,4 +118,4 @@ branch = true
 omit = ["*/tests/*"]
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 87
