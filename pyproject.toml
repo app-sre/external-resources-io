@@ -1,6 +1,6 @@
 [project]
 name = "external-resources-io"
-version = "0.6.0"
+version = "0.6.1"
 requires-python = ">=3.11"
 description = "Util classes for AppSRE External Resources system"
 license = { text = "Apache 2.0" }

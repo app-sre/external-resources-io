@@ -1,5 +1,4 @@
 version = 1
-revision = 1
 requires-python = ">=3.11"
 
 [[package]]
@@ -88,7 +87,7 @@ toml = [
 
 [[package]]
 name = "external-resources-io"
-version = "0.6.0"
+version = "0.6.1"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
@@ -114,7 +113,6 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.7.1" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.15.1" },
 ]
-provides-extras = ["cli"]
 
 [package.metadata.requires-dev]
 dev = [
