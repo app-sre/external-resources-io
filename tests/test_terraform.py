@@ -49,7 +49,11 @@ terraform {
   }
 }
 """
-    assert temp_file.read_text(encoding="utf-8") == expected_text == terraform_fmt(expected_text)
+    assert (
+        temp_file.read_text(encoding="utf-8")
+        == expected_text
+        == terraform_fmt(expected_text)
+    )
     subprocess.run(["terraform", f"-chdir={temp_file.parent}", "validate"], check=True)
 
 
