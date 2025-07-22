@@ -21,7 +21,7 @@ def temp_file(tmp_path: Path) -> Path:
 
 def test_tf_vars_json(data: BaseModel, temp_file: Path) -> None:
     create_tf_vars_json(data, temp_file)
-    assert temp_file.read_text() == (
+    assert temp_file.read_text(encoding="utf-8") == (
         '{"identifier":"test-external-resources-iam-role","assume_role":{"aws":"null","service":["ec2.amazonaws.com"],"federated":"null"},"inline_policy":"{\\"Version\\":\\"2012-10-17\\",\\"Statement\\":[{\\"Effect\\":\\"Allow\\",\\"Action\\":[\\"ec2:DescribeVpcs\\"],\\"Resource\\":[\\"*\\"]}]}","output_resource_name":"test-external-resources","region":"us-east-1"}'
     )
 
@@ -49,7 +49,11 @@ terraform {
   }
 }
 """
-    assert temp_file.read_text() == expected_text == terraform_fmt(expected_text)
+    assert (
+        temp_file.read_text(encoding="utf-8")
+        == expected_text
+        == terraform_fmt(expected_text)
+    )
     subprocess.run(["terraform", f"-chdir={temp_file.parent}", "validate"], check=True)
 
 
