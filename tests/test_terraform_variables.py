@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_core import PydanticUndefined
 
 from external_resources_io.config import EnvVar
@@ -56,6 +56,7 @@ class SampleModel(BaseModel):
     nested_nested: Sequence[NestedNestedModel]
     default_nested: NestedModel = NestedModel(numeric=0)
     none_none: str | bytes = ""
+    field_with_description: str | None = Field(description="A string variable")
 
 
 VARIABLES_TF_DICT = {
@@ -124,6 +125,10 @@ VARIABLES_TF_DICT = {
             "type": "any",
             "default": "",
         },
+        "field_with_description": {
+            "type": "string",
+            "description": "A string variable",
+        },
     }
 }
 
@@ -159,6 +164,11 @@ variable "empty_set" {
 variable "enabled" {
   type    = bool
   default = true
+}
+
+variable "field_with_description" {
+  type        = string
+  description = "A string variable"
 }
 
 variable "mode" {
@@ -236,19 +246,27 @@ def test_get_terraform_type_basic(python_type: Any, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("python_type", "default", "expected"),
+    ("python_type", "default", "description", "expected"),
     [
-        (str, "value", {"default": "value", "type": "string"}),
-        (int, None, {"default": None, "type": "number"}),
-        (bool, True, {"default": True, "type": "bool"}),
-        (str, PydanticUndefined, {"type": "string"}),
+        (str, "value", None, {"default": "value", "type": "string"}),
+        (int, None, None, {"default": None, "type": "number"}),
+        (bool, True, None, {"default": True, "type": "bool"}),
+        (str, PydanticUndefined, None, {"type": "string"}),
+        (
+            str,
+            "value",
+            "A string variable",
+            {"default": "value", "type": "string", "description": "A string variable"},
+        ),
     ],
 )
 def test_generate_terraform_variable(
-    python_type: Any, default: Any, expected: dict
+    python_type: Any, default: Any, description: str | None, expected: dict
 ) -> None:
     assert (
-        _generate_terraform_variable(python_type=python_type, default=default)
+        _generate_terraform_variable(
+            python_type=python_type, default=default, description=description
+        )
         == expected
     )
 

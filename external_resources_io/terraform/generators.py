@@ -73,7 +73,9 @@ def create_variables_tf_file(
 def _generate_fields(model: type[BaseModel]) -> dict[str, dict]:
     return {
         field_name: _generate_terraform_variable(
-            python_type=field_info.annotation, default=field_info.default
+            python_type=field_info.annotation,
+            default=field_info.default,
+            description=field_info.description,
         )
         for field_name, field_info in model.model_fields.items()
     }
@@ -84,7 +86,9 @@ def _generate_terraform_variables_from_model(model: type[BaseModel]) -> dict:
     return {"variable": _generate_fields(model)}
 
 
-def _generate_terraform_variable(python_type: Any, default: Any = None) -> dict:
+def _generate_terraform_variable(
+    python_type: Any, default: Any = None, description: str | None = None
+) -> dict:
     """Generates a Terraform variable block."""
     variable_block: dict[str, str | None] = {"type": _get_terraform_type(python_type)}
 
@@ -94,6 +98,8 @@ def _generate_terraform_variable(python_type: Any, default: Any = None) -> dict:
             if default and isinstance(default, BaseModel)
             else default
         )
+    if description:
+        variable_block["description"] = description
     return variable_block
 
 
