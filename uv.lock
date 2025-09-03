@@ -114,7 +114,7 @@ toml = [
 
 [[package]]
 name = "external-resources-io"
-version = "0.6.1"
+version = "0.6.2"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
@@ -132,6 +132,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "typer" },
 ]
 
 [package.metadata]
@@ -148,6 +149,7 @@ dev = [
     { name = "pytest", specifier = "~=8.3" },
     { name = "pytest-cov", specifier = "~=6.0" },
     { name = "ruff", specifier = "~=0.8" },
+    { name = "typer", specifier = ">=0.15.1" },
 ]
 
 [[package]]
