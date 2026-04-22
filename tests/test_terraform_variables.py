@@ -238,6 +238,7 @@ def sample_model() -> type[BaseModel]:
         (dict[str, int], "map(number)"),
         (dict, "map(any)"),
         (Literal["on", "off"], "string"),
+        (Literal[1, 2, 3], "number"),
         (NestedModel, "object({field = string,numeric = number})"),
     ],
 )
