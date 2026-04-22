@@ -116,6 +116,10 @@ def _convert_generic_types(origin: Any, args: Any) -> str:  # noqa: PLR0911
             return f"map({_get_terraform_type(args[1])})" if args else "map(any)"
 
         case t if t is Literal:
+            if args and all(isinstance(a, bool) for a in args):
+                return "bool"
+            if args and all(isinstance(a, int) for a in args):
+                return "number"
             return "string"
 
         case t if t in {UnionType, Union}:
