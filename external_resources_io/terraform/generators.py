@@ -44,11 +44,11 @@ def create_backend_tf_file(
         terraform_fmt(f"""\
             terraform {{
               backend "s3" {{
-                bucket = "{provision_data.module_provision_data.tf_state_bucket}"
-                key    = "{provision_data.module_provision_data.tf_state_key}"
-                region = "{provision_data.module_provision_data.tf_state_region}"
-                dynamodb_table = "{provision_data.module_provision_data.tf_state_dynamodb_table}"
-                profile = "external-resources-state"
+                bucket       = "{provision_data.module_provision_data.tf_state_bucket}"
+                key          = "{provision_data.module_provision_data.tf_state_key}"
+                region       = "{provision_data.module_provision_data.tf_state_region}"
+                use_lockfile = true
+                profile      = "external-resources-state"
               }}
             }}"""),
         encoding="utf-8",

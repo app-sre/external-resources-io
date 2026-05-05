@@ -41,11 +41,11 @@ def test_create_backend_tf_file(
     expected_text = """\
 terraform {
   backend "s3" {
-    bucket         = "test-external-resources-state"
-    key            = "aws/ter-int-dev/aws-iam-role/test-external-resources-iam-role/terraform.state"
-    region         = "us-east-1"
-    dynamodb_table = "test-external-resources-lock"
-    profile        = "external-resources-state"
+    bucket       = "test-external-resources-state"
+    key          = "aws/ter-int-dev/aws-iam-role/test-external-resources-iam-role/terraform.state"
+    region       = "us-east-1"
+    use_lockfile = true
+    profile      = "external-resources-state"
   }
 }
 """

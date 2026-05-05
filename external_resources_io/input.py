@@ -13,7 +13,6 @@ from external_resources_io.config import Config
 class TerraformProvisionOptions(BaseModel):
     tf_state_bucket: str
     tf_state_region: str
-    tf_state_dynamodb_table: str
     tf_state_key: str
 
 

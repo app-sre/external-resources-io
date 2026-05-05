@@ -53,7 +53,6 @@ def input_file(tmp_path: Path) -> Path:
                 "module_provision_data": {
                     "tf_state_bucket": "dev",
                     "tf_state_region": "us-east-1",
-                    "tf_state_dynamodb_table": "terraform-lock",
                     "tf_state_key": "terraform.tfstate",
                 },
             },
