@@ -151,7 +151,7 @@ toml = [
 
 [[package]]
 name = "external-resources-io"
-version = "0.6.3"
+version = "0.6.4"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },

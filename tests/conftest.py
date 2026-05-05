@@ -39,7 +39,6 @@ def ai_data() -> dict[str, Any]:
             "module_provision_data": {
                 "tf_state_bucket": "test-external-resources-state",
                 "tf_state_region": "us-east-1",
-                "tf_state_dynamodb_table": "test-external-resources-lock",
                 "tf_state_key": "aws/ter-int-dev/aws-iam-role/test-external-resources-iam-role/terraform.state",
             },
         },
