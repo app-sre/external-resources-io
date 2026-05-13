@@ -19,7 +19,7 @@ documentation = "https://github.com/app-sre/external-resources-io"
 [dependency-groups]
 dev = [
     # dev dependencies
-    "mypy ~=1.13",
+    "mypy ~=2.1",
     "pytest ~=9.0",
     "pytest-cov ~=7.0",
     "ruff ~=0.8",
