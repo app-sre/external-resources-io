@@ -90,7 +90,7 @@ def _generate_terraform_variable(
     python_type: Any, default: Any = None, description: str | None = None
 ) -> dict:
     """Generates a Terraform variable block."""
-    variable_block: dict[str, str | None] = {"type": _get_terraform_type(python_type)}
+    variable_block: dict[str, Any] = {"type": _get_terraform_type(python_type)}
 
     if default is not PydanticUndefined:
         variable_block["default"] = (
