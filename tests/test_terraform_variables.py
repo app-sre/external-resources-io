@@ -2,8 +2,7 @@
 
 import subprocess
 from collections.abc import Sequence
-from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 from pydantic import BaseModel, Field
@@ -21,6 +20,9 @@ from external_resources_io.terraform.run import (
     terraform_available,
     terraform_fmt,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 # Test Models

@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/python-311@sha256:a0bdb55576fc5b8d6704279307817828ef027e1065533ceba133fe9516003a6c AS base
+FROM registry.access.redhat.com/ubi10/python-314-minimal@sha256:0c5b5d198178280e65577e63251ee5ee49435e1a711bef4e4b5b471723e0ed3c AS base
 COPY --from=ghcr.io/astral-sh/uv:0.11.17@sha256:03bdc89bb9798628846e60c3a9ad19006c8c3c724ccd2985a33145c039a0577b /uv /bin/uv
 COPY LICENSE /licenses/
 
@@ -7,6 +7,14 @@ ENV \
     UV_PROJECT_ENVIRONMENT=$APP_ROOT \
     # disable uv cache. it doesn't make sense in a container
     UV_NO_CACHE=true
+
+USER 0
+# Install dependencies
+RUN INSTALL_PKGS="make unzip" && \
+    microdnf -y --nodocs --setopt=install_weak_deps=0 install $INSTALL_PKGS && \
+    microdnf clean all && \
+    rm -rf /var/cache/yum
+USER 1001
 
 COPY pyproject.toml uv.lock README.md Makefile ./
 # Test lock file is up to date
@@ -23,7 +31,9 @@ RUN make dev-venv
 FROM base AS test
 
 # Install Terraform for testing
-RUN curl -sfL https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip \
+ENV TF_VERSION="1.13.4"
+ARG TARGETARCH
+RUN curl -sfL https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_${TARGETARCH}.zip \
     -o terraform.zip && \
     unzip terraform.zip && \
     mkdir -p $HOME/bin && \
