@@ -14,12 +14,12 @@ Utility library to parse input data from App-Interface into External Resource mo
 
 ## Development
 
-This project targets Python version 3.11.x for best compatibility and leverages [uv](https://docs.astral.sh/uv/) for the dependency managment.
+This project targets Python version 3.14.x for best compatibility and leverages [uv](https://docs.astral.sh/uv/) for the dependency managment.
 
 Create a local development environment with all required dependencies:
 
 ```sh
-uv sync --python 3.11
+uv sync -U
 ```
 
 ## Testing

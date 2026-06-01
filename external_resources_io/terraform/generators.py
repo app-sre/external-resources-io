@@ -3,14 +3,16 @@ import json
 from collections.abc import Sequence
 from pathlib import Path
 from types import UnionType
-from typing import Any, Literal, Union, get_args, get_origin
+from typing import TYPE_CHECKING, Any, Literal, Union, get_args, get_origin
 
 from pydantic import BaseModel
 from pydantic_core import PydanticUndefined
 
 from external_resources_io.config import Config
-from external_resources_io.input import AppInterfaceProvision
 from external_resources_io.terraform.run import terraform_fmt
+
+if TYPE_CHECKING:
+    from external_resources_io.input import AppInterfaceProvision
 
 
 class SetEncoder(json.JSONEncoder):

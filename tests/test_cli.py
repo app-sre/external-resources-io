@@ -1,6 +1,6 @@
 # ruff: noqa: PLC2701
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 from pydantic import BaseModel
@@ -13,6 +13,9 @@ from external_resources_io.cli import (
     tf_app,
 )
 from external_resources_io.input import AppInterfaceProvision
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class Data(BaseModel):

@@ -1,8 +1,11 @@
 import logging
 import subprocess
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 from external_resources_io.config import Config
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +14,7 @@ def terraform_available() -> bool:
     try:
         subprocess.run(["terraform", "--version"], check=True, capture_output=True)
         return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
+    except subprocess.CalledProcessError, FileNotFoundError:
         return False
 
 

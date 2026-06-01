@@ -1,17 +1,22 @@
 import subprocess
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from pydantic import BaseModel
 
 from external_resources_io.config import EnvVar
-from external_resources_io.input import AppInterfaceProvision
 from external_resources_io.terraform.generators import (
     create_backend_tf_file,
     create_tf_vars_json,
     terraform_fmt,
 )
 from external_resources_io.terraform.run import terraform_run
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pydantic import BaseModel
+
+    from external_resources_io.input import AppInterfaceProvision
 
 
 @pytest.fixture

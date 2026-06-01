@@ -1,13 +1,15 @@
 import base64
 import json
 import os
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel
 
 from external_resources_io.config import Config
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 class TerraformProvisionOptions(BaseModel):
@@ -30,7 +32,7 @@ class AppInterfaceProvision(BaseModel):
 T = TypeVar("T", bound=BaseModel)
 
 
-def parse_model(model_class: type[T], data: Mapping[str, Any]) -> T:
+def parse_model[T: BaseModel](model_class: type[T], data: Mapping[str, Any]) -> T:
     return model_class.model_validate(data)
 
 
