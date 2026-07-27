@@ -1,4 +1,4 @@
-# ruff: noqa: PLC2701
+# ruff: file-ignore[import-private-name]
 import json
 from typing import TYPE_CHECKING
 

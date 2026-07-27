@@ -1,4 +1,4 @@
-# ruff: noqa: ANN401,PLC2701
+# ruff: file-ignore[any-type, import-private-name]
 
 import subprocess
 from collections.abc import Sequence
