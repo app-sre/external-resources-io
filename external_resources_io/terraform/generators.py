@@ -1,4 +1,4 @@
-# ruff: noqa: ANN401
+# ruff: file-ignore[any-type]
 import json
 from collections.abc import Sequence
 from pathlib import Path
@@ -105,7 +105,7 @@ def _generate_terraform_variable(
     return variable_block
 
 
-def _convert_generic_types(origin: Any, args: Any) -> str:  # noqa: PLR0911
+def _convert_generic_types(origin: Any, args: Any) -> str:  # ruff: ignore[too-many-return-statements]
     """Convert generic types to Terraform types."""
     match origin:
         case t if t in {list, Sequence}:
@@ -133,7 +133,7 @@ def _convert_generic_types(origin: Any, args: Any) -> str:  # noqa: PLR0911
             return "any"
 
 
-def _convert_basic_types(python_type: Any) -> str:  # noqa: PLR0911
+def _convert_basic_types(python_type: Any) -> str:  # ruff: ignore[too-many-return-statements]
     """Convert basic python types to Terraform types."""
     match python_type:
         case t if t is str:
@@ -170,7 +170,7 @@ def _get_terraform_type(python_type: Any) -> str:
     )
 
 
-def _convert_json_value_to_hcl(value: Any) -> str:  # noqa: PLR0911
+def _convert_json_value_to_hcl(value: Any) -> str:  # ruff: ignore[too-many-return-statements]
     """Converts a JSON value to HCL."""
     match value:
         case t if isinstance(t, str):

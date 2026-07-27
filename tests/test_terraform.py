@@ -76,7 +76,7 @@ def test_terraform_run(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TERRAFORM_CMD", "echo")
     monkeypatch.setenv("DRY_RUN", "0")
     assert terraform_run(["foo bar"]) == "foo bar\n"
-    assert terraform_run(["version"], dry_run=True) == ""  # noqa: PLC1901
+    assert terraform_run(["version"], dry_run=True) == ""  # ruff: ignore[compare-to-empty-string]
 
 
 def test_terraform_run_error(monkeypatch: pytest.MonkeyPatch) -> None:
