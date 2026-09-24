@@ -36,5 +36,5 @@ def setup_logging() -> None:
         },
         "formatters": {"base": {"format": "%(prefix)s%(levelname)s - %(message)s"}},
         "root": {"level": config.log_level, "handlers": ["console"]},
-        "botocore": {"level": "ERROR", "handlers": ["console"]},
+        "loggers": {"botocore": {"level": "ERROR"}},
     })
