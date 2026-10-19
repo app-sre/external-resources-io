@@ -51,7 +51,7 @@ def _get_app_interface_data_class(app_interface_input_class: str) -> type[BaseMo
         .model_fields["data"]
         .annotation
     )
-    if not data_class or not issubclass(data_class, BaseModel):
+    if not isinstance(data_class, type) or not issubclass(data_class, BaseModel):
         raise TypeError(f"{data_class} must be a subclass of pydantic.BaseModel")
     return data_class
 
